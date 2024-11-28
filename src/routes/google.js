@@ -8,10 +8,11 @@ const router = express.Router();
 
 let io; // To store the Socket.IO instance
 
+// OAuth 2.0 client setup
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  `${process.env.BASE_URL}/auth/google/callback`
+  `${process.env.BASE_URL}/auth/google/callback` // Ensure BASE_URL is correctly set
 );
 
 const logFilePath = path.join(__dirname, '../../logs/file-change-log.txt');
@@ -24,7 +25,7 @@ function ensureLogFileExists() {
   }
 }
 
-// Append messages to the log file for Moved and Deleted actions
+// Append messages to the change-log file for "Moved" and "Deleted" actions
 function appendToLogForChangeLog(io, timestamp, actor, action, target) {
   if (action !== 'Deleted' && action !== 'Moved') return;
 
@@ -63,7 +64,7 @@ async function checkTokenMiddleware(req, res, next) {
   }
 }
 
-// Function to map activity types
+// Map activity types
 function getActionType(activity) {
   if (activity.primaryActionDetail?.create) return 'Created';
   if (activity.primaryActionDetail?.edit) return 'Edited';
@@ -72,7 +73,7 @@ function getActionType(activity) {
   return 'Performed an action';
 }
 
-// Function to get the actor's name
+// Get actor name
 function getActorName(actor) {
   if (actor?.user?.knownUser?.displayName) {
     return actor.user.knownUser.displayName; // Human-readable display name
@@ -149,7 +150,7 @@ router.get('/files', checkTokenMiddleware, async (req, res) => {
   }
 });
 
-// Recent Activity: Logs all actions
+// Log recent activity
 router.get('/recent-activity', async (req, res) => {
   try {
     const service = google.driveactivity({ version: 'v2', auth: oauth2Client });
@@ -166,7 +167,6 @@ router.get('/recent-activity', async (req, res) => {
       const action = getActionType(activity);
       const target = activity.targets?.[0]?.driveItem?.title || 'Unnamed Item';
 
-      // Log Deleted and Moved actions to change-log
       appendToLogForChangeLog(io, timestamp, actor, action, target);
 
       return `<li><b>${new Date(timestamp).toLocaleString()}</b>: 
@@ -184,7 +184,7 @@ router.get('/recent-activity', async (req, res) => {
   }
 });
 
-// Change Log: Display only Deleted and Moved actions in real time
+// Change Log
 router.get('/change-log', (req, res) => {
   try {
     ensureLogFileExists();
@@ -196,7 +196,6 @@ router.get('/change-log', (req, res) => {
       <script>
         const socket = io();
 
-        // Listen for real-time updates
         socket.on('fileChange', (message) => {
           const logElement = document.getElementById('log');
           logElement.textContent += '\\n' + message;

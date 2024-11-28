@@ -1,13 +1,15 @@
 const express = require('express');
 const { google } = require('googleapis');
 const { loadToken } = require('../utils/tokenManager');
+require('dotenv').config();
 
 const router = express.Router();
 
+// Initialize OAuth2 Client
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  `${process.env.BASE_URL}/auth/google/callback`
+  `${process.env.BASE_URL}/auth/google/callback` // Ensure your BASE_URL is correctly set in the .env file
 );
 
 // Google OAuth Login
@@ -31,7 +33,10 @@ router.get('/google/login', async (req, res) => {
     // If no token, initiate the login flow
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/drive.activity.readonly'],
+      scope: [
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/drive.activity.readonly',
+      ],
       prompt: 'consent', // Ensure fresh consent if needed
     });
     res.redirect(authUrl);
@@ -41,7 +46,10 @@ router.get('/google/login', async (req, res) => {
     // If token is invalid, initiate login flow
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/drive.readonly', 'https://www.googleapis.com/auth/drive.activity.readonly'],
+      scope: [
+        'https://www.googleapis.com/auth/drive.readonly',
+        'https://www.googleapis.com/auth/drive.activity.readonly',
+      ],
       prompt: 'consent',
     });
     res.redirect(authUrl);
