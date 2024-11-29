@@ -1,58 +1,26 @@
 const express = require('express');
 const { google } = require('googleapis');
-const { loadToken } = require('../utils/tokenManager');
-require('dotenv').config();
 
 const router = express.Router();
 
-// Initialize OAuth2 Client
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  `${process.env.BASE_URL}/auth/google/callback` // Ensure your BASE_URL is correctly set in the .env file
+  `${process.env.BASE_URL}/auth/google/callback`
 );
 
 // Google OAuth Login
 router.get('/google/login', async (req, res) => {
   try {
-    // Check if the token exists and is valid
-    const token = req.cookies.google_auth_token;
-
-    if (token) {
-      const parsedToken = JSON.parse(token);
-      oauth2Client.setCredentials(parsedToken);
-
-      // Check if the access token is still valid
-      const drive = google.drive({ version: 'v3', auth: oauth2Client });
-      await drive.files.list({ pageSize: 1 });
-
-      // If valid, redirect to the files page
-      return res.redirect('/google/files');
-    }
-
-    // If no token, initiate the login flow
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: [
-        'https://www.googleapis.com/auth/drive.readonly',
-        'https://www.googleapis.com/auth/drive.activity.readonly',
-      ],
-      prompt: 'consent', // Ensure fresh consent if needed
-    });
-    res.redirect(authUrl);
-  } catch (error) {
-    console.error('Error during login check:', error.message);
-
-    // If token is invalid, initiate login flow
-    const authUrl = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: [
-        'https://www.googleapis.com/auth/drive.readonly',
-        'https://www.googleapis.com/auth/drive.activity.readonly',
-      ],
+      scope: ['https://www.googleapis.com/auth/drive.readonly'],
       prompt: 'consent',
     });
     res.redirect(authUrl);
+  } catch (error) {
+    console.error('Error during login:', error.message);
+    res.status(500).send('Failed to initiate Google login.');
   }
 });
 
