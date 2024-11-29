@@ -1,50 +1,54 @@
 const express = require('express');
 const { google } = require('googleapis');
+require('dotenv').config();
 
 const router = express.Router();
 
+// OAuth 2.0 Client Setup
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
   `${process.env.BASE_URL}/auth/google/callback`
 );
 
-// Google OAuth Login
-router.get('/google/login', async (req, res) => {
-  try {
-    const authUrl = oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/drive.readonly',
-              'https://www.googleapis.com/auth/drive.activity.readonly',],
-      prompt: 'consent',
-    });
-    res.redirect(authUrl);
-  } catch (error) {
-    console.error('Error during login:', error.message);
-    res.status(500).send('Failed to initiate Google login.');
-  }
+// Scopes
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive.readonly',
+  'https://www.googleapis.com/auth/drive.activity.readonly',
+];
+
+// **Route: Login with Google**
+router.get('/google/login', (req, res) => {
+  // Generate OAuth 2.0 URL
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline', // Ensures refresh token generation
+    scope: SCOPES,
+    prompt: 'consent', // Always re-prompt for consent
+  });
+  console.log('Redirecting to:', authUrl);
+  res.redirect(authUrl);
 });
 
-// Google OAuth Callback
+// **Route: OAuth 2.0 Callback**
 router.get('/google/callback', async (req, res) => {
-  try {
-    const { code } = req.query;
-    if (!code) {
-      return res.status(400).send('Missing authorization code.');
-    }
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('Missing authorization code.');
+  }
 
+  try {
+    // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    // Save tokens in cookies
+    // Save tokens in cookies for future use
     res.cookie('google_auth_token', JSON.stringify(tokens), { httpOnly: true });
 
-    console.log('Tokens saved:', tokens);
-
-    res.redirect('/google/files');
+    console.log('OAuth Tokens:', tokens);
+    res.redirect('/google/files'); // Redirect to Google Drive files page
   } catch (error) {
-    console.error('Error during Google OAuth callback:', error.message);
-    res.status(500).send('Google Authentication Failed.');
+    console.error('Error exchanging code for tokens:', error.message);
+    res.status(500).send('Authentication failed.');
   }
 });
 
