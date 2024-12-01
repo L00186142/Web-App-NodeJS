@@ -13,6 +13,7 @@ const oauth2Client = new google.auth.OAuth2(
 
 // Scopes
 const SCOPES = [
+  'https://www.googleapis.com/auth',
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/drive.activity.readonly',
 ];
