@@ -4,8 +4,10 @@ require('dotenv').config();
 
 const router = express.Router();
 
-// OAuth 2.0 Client Setup
+// **Determine if Running Locally or in Production**
 const isLocal = process.env.NODE_ENV !== 'production';
+
+// **OAuth 2.0 Client Setup**
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
@@ -14,13 +16,13 @@ const oauth2Client = new google.auth.OAuth2(
     : `${process.env.BASE_URL}/auth/google/callback`
 );
 
-
-// Scopes
+// **Scopes for OAuth**
 const SCOPES = [
-  'https://www.googleapis.com/auth',
   'https://www.googleapis.com/auth/drive.readonly',
   'https://www.googleapis.com/auth/drive.activity.readonly'
 ];
+
+let userCredential = null;
 
 // **Route: Login with Google**
 router.get('/google/login', (req, res) => {
@@ -30,6 +32,7 @@ router.get('/google/login', (req, res) => {
     scope: SCOPES,
     prompt: 'consent', // Always re-prompt for consent
   });
+
   console.log('Redirecting to:', authUrl);
   res.redirect(authUrl);
 });
@@ -46,6 +49,9 @@ router.get('/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
+    // Save credential globally for demonstration (use a secure database in production)
+    userCredential = tokens;
+
     // Save tokens in cookies for future use
     res.cookie('google_auth_token', JSON.stringify(tokens), { httpOnly: true });
 
@@ -55,6 +61,15 @@ router.get('/google/callback', async (req, res) => {
     console.error('Error exchanging code for tokens:', error.message);
     res.status(500).send('Authentication failed.');
   }
+});
+
+// **Optional Route: Logout and Clear Session**
+router.get('/google/logout', (req, res) => {
+  // Clear cookies
+  res.clearCookie('google_auth_token');
+  userCredential = null;
+  console.log('User logged out and tokens cleared.');
+  res.redirect('/');
 });
 
 module.exports = router;
