@@ -39,26 +39,24 @@ router.get('/google/login', (req, res) => {
 
 // **Route: OAuth 2.0 Callback**
 router.get('/google/callback', async (req, res) => {
+  console.log('Callback reached');
+  console.log('Query Params:', req.query);
+
   const code = req.query.code;
   if (!code) {
+    console.error('Missing authorization code.');
     return res.status(400).send('Missing authorization code.');
   }
 
   try {
-    // Exchange authorization code for tokens
     const { tokens } = await oauth2Client.getToken(code);
+    console.log('Tokens:', tokens);
+
     oauth2Client.setCredentials(tokens);
-
-    // Save credential globally for demonstration (use a secure database in production)
-    userCredential = tokens;
-
-    // Save tokens in cookies for future use
     res.cookie('google_auth_token', JSON.stringify(tokens), { httpOnly: true });
-
-    console.log('OAuth Tokens:', tokens);
-    res.redirect('/google/files'); // Redirect to Google Drive files page
+    res.redirect('/google/files');
   } catch (error) {
-    console.error('Error exchanging code for tokens:', error.message);
+    console.error('Error during callback:', error.message);
     res.status(500).send('Authentication failed.');
   }
 });
