@@ -5,11 +5,15 @@ require('dotenv').config();
 const router = express.Router();
 
 // OAuth 2.0 Client Setup
+const isLocal = process.env.NODE_ENV !== 'production';
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  `${process.env.BASE_URL}/auth/google/callback`
+  isLocal
+    ? `http://localhost:${process.env.PORT || 3000}/auth/google/callback`
+    : `${process.env.BASE_URL}/auth/google/callback`
 );
+
 
 // Scopes
 const SCOPES = [
