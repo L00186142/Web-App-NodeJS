@@ -2,6 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const path = require('path');
+
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -18,10 +20,12 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
+// Serve static files
+app.use(express.static(path.join(__dirname, 'src')));
+
 // Routes
 app.use('/auth', authRoutes);
 app.use('/google', googleRoutes);
-
 
 // Privacy Policy and Terms of Service
 app.get('/privacy-policy', (req, res) => {
@@ -34,14 +38,13 @@ app.get('/terms', (req, res) => {
 
 // Home Page
 app.get('/', (req, res) => {
-  const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
   res.send(`
     <h1>Welcome to the Google Drive App</h1>
-    <p><a href="${baseUrl}/auth/google/login">Login with Google</a></p>
-    <p><a href="${baseUrl}/google/files">View Google Drive Files</a></p>
-    <p><a href="${baseUrl}/google/recent-activity">View Recent Activity</a></p>
-    <p><a href="${baseUrl}/privacy-policy">Privacy Policy</a></p>
-    <p><a href="${baseUrl}/terms">Terms of Service</a></p>
+    <p><a href="/auth/google/login">Login with Google</a></p>
+    <p><a href="/google/files">View Google Drive Files</a></p>
+    <p><a href="/google/recent-activity">View Recent Activity</a></p>
+    <p><a href="/privacy-policy">Privacy Policy</a></p>
+    <p><a href="/terms">Terms of Service</a></p>
   `);
 });
 
@@ -57,4 +60,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-
