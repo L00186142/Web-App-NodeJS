@@ -3,6 +3,9 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
+app.use('/src', express.static(path.join(__dirname, 'src')));
+
 
 const authRoutes = require('./routes/auth');
 const googleRoutes = require('./routes/google');
@@ -42,6 +45,30 @@ app.get('/', (req, res) => {
     <p><a href="${baseUrl}/google/recent-activity">View Recent Activity</a></p>
     <p><a href="${baseUrl}/privacy-policy">Privacy Policy</a></p>
     <p><a href="${baseUrl}/terms">Terms of Service</a></p>
+    <script type="module" src="/src/firebase.js"></script> <!-- Include Firebase JS -->
+  `);
+});
+
+app.get('/', (req, res) => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGVBt-1cj3kEz9EjfbbSMKLAlZUkE6txw",
+    authDomain: "web-hosting-cloud-a8a14.firebaseapp.com",
+    projectId: "web-hosting-cloud-a8a14",
+    storageBucket: "web-hosting-cloud-a8a14.firebasestorage.app",
+    messagingSenderId: "875833291292",
+    appId: "1:875833291292:web:ee734267fdaa195c68a5d9",
+    measurementId: "G-BV238RR5W8"
+  };
+
+  res.send(`
+    <h1>Welcome to the Google Drive App</h1>
+    <script>
+      const firebaseConfig = ${JSON.stringify(firebaseConfig)};
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+      const app = initializeApp(firebaseConfig);
+    </script>
+    <p><a href="/auth/google/login">Login with Google</a></p>
+    <p><a href="/google/files">View Google Drive Files</a></p>
   `);
 });
 
