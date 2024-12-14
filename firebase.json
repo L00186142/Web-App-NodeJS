@@ -1,19 +1,28 @@
 {
-    "hosting": {
-      "public": "src",
+  "hosting": {
+    "public": "src",
+    "ignore": [
+      "firebase-debug.log",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "app"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "src",
+      "codebase": "default",
       "ignore": [
+        "node_modules",
+        ".git",
         "firebase-debug.log",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
-          "source": "**",
-          "function": "app"
-        }
+        "firebase-debug.*.log",
+        "*.local"
       ]
-    },
-    "functions": {
-      "source": "src"
     }
-  }
-  
+  ]
+}
